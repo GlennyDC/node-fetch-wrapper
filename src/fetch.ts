@@ -21,7 +21,7 @@ interface Options {
 
 export type Body = string | FormData | object;
 
-export abstract class Request {
+export class Request {
   private readonly baseUrl: string;
   private readonly headers?: HeadersInit;
 
@@ -80,7 +80,11 @@ export abstract class Request {
     return response.body;
   }
 
-  protected async _request<ReturnValue>(
+  private checkResponse(response: Response): boolean {
+    return response.ok;
+  }
+
+  private async request<ReturnValue>(
     method: HttpMethod,
     path: string,
     providedBody: Body | null,
@@ -90,6 +94,8 @@ export abstract class Request {
     const body = providedBody ? this.buildBody(providedBody) : undefined;
     const headers = this.buildHeaders(providedBody, options?.headers);
 
+    const requestTimestamp = new Date().toISOString();
+
     const response = await fetch(url, {
       method,
       headers,
@@ -98,10 +104,11 @@ export abstract class Request {
 
     const returnValue = await this.parseResponse<ReturnValue>(response);
 
-    if (!response.ok) {
+    if (!this.checkResponse(response)) {
       throw new RequestError(
         method,
         url,
+        requestTimestamp,
         response.status,
         response.statusText,
         JSON.stringify(returnValue, null, 2),
@@ -114,24 +121,19 @@ export abstract class Request {
     return returnValue;
   }
 
-  protected async _get<ReturnValue = void>(
+  async get<ReturnValue = void>(
     path: string,
     options?: Options,
   ): Promise<ReturnValue> {
-    return await this._request<ReturnValue>(
-      HttpMethod.GET,
-      path,
-      null,
-      options,
-    );
+    return await this.request<ReturnValue>(HttpMethod.GET, path, null, options);
   }
 
-  protected async _post<ReturnValue = void>(
+  async post<ReturnValue = void>(
     path: string,
     body: Body,
     options?: Options,
   ): Promise<ReturnValue> {
-    return await this._request<ReturnValue>(
+    return await this.request<ReturnValue>(
       HttpMethod.POST,
       path,
       body,
@@ -139,25 +141,20 @@ export abstract class Request {
     );
   }
 
-  protected async _put<ReturnValue = void>(
+  async put<ReturnValue = void>(
     path: string,
     body: Body,
     options?: Options,
   ): Promise<ReturnValue> {
-    return await this._request<ReturnValue>(
-      HttpMethod.PUT,
-      path,
-      body,
-      options,
-    );
+    return await this.request<ReturnValue>(HttpMethod.PUT, path, body, options);
   }
 
-  protected async _patch<ReturnValue = void>(
+  async patch<ReturnValue = void>(
     path: string,
     body: Body,
     options?: Options,
   ): Promise<ReturnValue> {
-    return await this._request<ReturnValue>(
+    return await this.request<ReturnValue>(
       HttpMethod.PATCH,
       path,
       body,
@@ -165,11 +162,11 @@ export abstract class Request {
     );
   }
 
-  protected async _delete<ReturnValue = void>(
+  async delete<ReturnValue = void>(
     path: string,
     options?: Options,
   ): Promise<ReturnValue> {
-    return await this._request<ReturnValue>(
+    return await this.request<ReturnValue>(
       HttpMethod.DELETE,
       path,
       null,
