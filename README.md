@@ -1,1 +1,1 @@
-# Node.js with Typescript seed
+# Node.js Fetch wrapper
