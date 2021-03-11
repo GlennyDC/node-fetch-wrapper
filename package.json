@@ -6,11 +6,11 @@
   "license": "MIT",
   "scripts": {
     "predev": "rimraf dist/*",
-    "dev": "tsc -p tsconfig.build.json -w",
+    "dev": "tsc -p tsconfig.json -w",
     "start": "node dist/index.js",
     "prebuild": "rimraf dist/* ",
     "build": "cross-env NODE_ENV=production tsc -p tsconfig.build.json",
-    "test": "jest",
+    "test": "jest --roots src/",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --check --loglevel warn .",

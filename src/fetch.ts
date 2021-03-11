@@ -3,7 +3,7 @@ import { merge } from "lodash/fp";
 import fetch, { BodyInit, HeadersInit, Response } from "node-fetch";
 import { stringify } from "query-string";
 
-import { RequestError } from "./requestError";
+import { FetchError } from "./fetchError";
 
 export enum HttpMethod {
   GET = "GET",
@@ -16,12 +16,11 @@ export enum HttpMethod {
 interface Options {
   queryParams?: Record<string, any>;
   headers?: Record<string, string>;
-  bypassBaseUrl?: boolean;
 }
 
 export type Body = string | FormData | object;
 
-export class Request {
+export class Fetch {
   private readonly baseUrl: string;
   private readonly headers?: HeadersInit;
 
@@ -34,12 +33,19 @@ export class Request {
     return "?" + stringify(queryParams);
   }
 
+  private isAbsoluteUrl(url: string): boolean {
+    // TODO
+    return false;
+  }
+
   private buildURL(baseURL: string, path: string, options?: Options): string {
-    const { queryParams, bypassBaseUrl } = options || {};
+    const { queryParams } = options || {};
 
     const queryString = queryParams ? this.buildQueryString(queryParams) : "";
 
-    return bypassBaseUrl ? path + queryString : baseURL + path + queryString;
+    return this.isAbsoluteUrl(path)
+      ? path + queryString
+      : baseURL + path + queryString;
   }
 
   private buildBody(body: Body): BodyInit {
@@ -84,7 +90,7 @@ export class Request {
     return response.ok;
   }
 
-  private async request<ReturnValue>(
+  async request<ReturnValue>(
     method: HttpMethod,
     path: string,
     providedBody: Body | null,
@@ -105,7 +111,7 @@ export class Request {
     const returnValue = await this.parseResponse<ReturnValue>(response);
 
     if (!this.checkResponse(response)) {
-      throw new RequestError(
+      throw new FetchError(
         method,
         url,
         requestTimestamp,

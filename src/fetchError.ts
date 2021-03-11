@@ -1,7 +1,7 @@
 import { BaseError } from "./baseError";
 import { HttpMethod } from "./fetch";
 
-export class RequestError extends BaseError {
+export class FetchError extends BaseError {
   readonly method: HttpMethod;
   readonly resource: string;
   readonly requestTimestamp: string;
@@ -17,7 +17,7 @@ export class RequestError extends BaseError {
     responseBody: string,
     wrappedError?: Error,
   ) {
-    super(message, "REQUEST_ERROR", wrappedError);
+    super(message, "FETCH_ERROR", wrappedError);
     this.method = method;
     this.resource = decodeURIComponent(resource);
     this.requestTimestamp = requestTimestamp;
